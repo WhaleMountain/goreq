@@ -29,7 +29,7 @@ func (h *Handler) HandleRequest(ctx context.Context, request mcp.CallToolRequest
 		return nil, fmt.Errorf("url must be a string")
 	}
 	if _, err := gourl.ParseRequestURI(url); err != nil {
-		return nil, fmt.Errorf("invalid URL: %s", url)
+		return mcp.NewToolResultError(fmt.Sprintf("invalid URL: %s", url)), nil
 	}
 
 	content, err := h.browser.GetContent(url)
