@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.3.1
-	github.com/mark3labs/mcp-go v0.24.1
+	github.com/mark3labs/mcp-go v0.25.0
 	github.com/playwright-community/playwright-go v0.5101.0
 )
 
