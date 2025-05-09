@@ -8,7 +8,29 @@ PlaywrightでURLにアクセスしてコンテンツをMarkdown形式で返却�
 docker build -t mcp/goreq .
 ```
 
-## 実行方法
+## MCPの設定例
+
+Dockerイメージを作成後、VS Codeのsettings.jsonを下記のように設定する。
+```json
+"mcp": {
+    "inputs": [],
+    "servers": {
+        "goreq": {
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-i",
+                "mcp/goreq",
+                "-t",
+                "stdio"
+            ]
+        }
+    }
+}
+```
+
+## 直接実行方法
 
 * sse
 ```
