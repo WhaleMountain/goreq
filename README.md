@@ -10,7 +10,7 @@ docker build -t mcp/goreq .
 
 ## MCPの設定例
 
-Dockerイメージを作成後、VS Codeのsettings.jsonを下記のように設定する。
+Dockerイメージを作成後、VS Codeのsettings.json(もしくは`.vscode/mcp.json`)を下記のように設定する。
 ```json
 "mcp": {
     "inputs": [],
