@@ -1,14 +1,15 @@
+// Command goreq provides a MCP server that fetches web content and converts it to markdown
 package main
 
 import (
 	"context"
 	"flag"
-	"goreq/handler"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/WhaleMountain/goreq/internal/handler"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -57,7 +58,7 @@ func main() {
 
 	if transport == "sse" {
 		sseServer := server.NewSSEServer(s, server.WithBaseURL("http://localhost:9000"))
-		log.Printf("SSE Server listegning on :9000")
+		log.Printf("SSE Server listening on :9000")
 		if err := sseServer.Start(":9000"); err != nil {
 			log.Fatalf("Failed to start sse server: %v", err)
 		}
