@@ -62,11 +62,21 @@ func main() {
 		if err := sseServer.Start(":9000"); err != nil {
 			log.Fatalf("Failed to start sse server: %v", err)
 		}
+
+	} else if transport == "http" {
+		log.Printf("Starting HTTP Server on :9000")
+		httpServer := server.NewStreamableHTTPServer(s)
+		log.Printf("HTTP Server listening on :9000")
+		if err := httpServer.Start(":9000"); err != nil {
+			log.Fatalf("Failed to start HTTP server: %v\n", err)
+		}
+
 	} else if transport == "stdio" {
 		log.Printf("Starting stdio Server")
 		if err := server.ServeStdio(s); err != nil {
 			log.Fatalf("Failed to start stdio server: %v\n", err)
 		}
+
 	} else {
 		log.Fatalf("Invalid transport type: %s. Must be 'stdio' or 'sse'", transport)
 	}
