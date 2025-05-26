@@ -78,6 +78,6 @@ func main() {
 		}
 
 	} else {
-		log.Fatalf("Invalid transport type: %s. Must be 'stdio' or 'sse'", transport)
+		log.Fatalf("Invalid transport type: %s. Must be 'stdio' or 'http' or 'sse'", transport)
 	}
 }
