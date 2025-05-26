@@ -32,7 +32,7 @@ func main() {
 
 	// Add tool
 	tool := mcp.NewTool("get_url_content_for_markdown",
-		mcp.WithDescription("URLのコンテンツの取得"),
+		mcp.WithDescription("指定したURLのWebページ内容を取得し、Markdown形式で返します。"),
 		mcp.WithString("url",
 			mcp.Required(),
 			mcp.Description("WebSite URL"),
