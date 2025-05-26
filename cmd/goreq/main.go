@@ -65,7 +65,7 @@ func main() {
 
 	} else if transport == "http" {
 		log.Printf("Starting HTTP Server on :9000")
-		httpServer := server.NewStreamableHTTPServer(s)
+		httpServer := server.NewStreamableHTTPServer(s, server.WithEndpointPath("/mcp"))
 		log.Printf("HTTP Server listening on :9000")
 		if err := httpServer.Start(":9000"); err != nil {
 			log.Fatalf("Failed to start HTTP server: %v\n", err)
