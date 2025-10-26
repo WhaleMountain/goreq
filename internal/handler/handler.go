@@ -8,7 +8,7 @@ import (
 
 	htmltomarkdown "github.com/JohannesKaufmann/html-to-markdown/v2"
 	"github.com/WhaleMountain/goreq/internal/browser"
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // Handler handles MCP requests
@@ -26,27 +26,35 @@ func NewHandler() (*Handler, error) {
 	return handler, nil
 }
 
-// HandleRequest handles MCP tool requests
-func (h *Handler) HandleRequest(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	url, err := request.RequireString("url")
-	if err != nil {
-		return mcp.NewToolResultError((err.Error())), nil
-	}
-	if _, err := gourl.ParseRequestURI(url); err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid URL: %s", url)), nil
+type ToolArgs struct {
+	URL string `json:"url" jsonschema:"required,description=WebSite URL"`
+}
+
+func (h *Handler) HandleRequest(ctx context.Context, request *mcp.CallToolRequest, args ToolArgs) (*mcp.CallToolResult, any, error) {
+	if _, err := gourl.ParseRequestURI(args.URL); err != nil {
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{
+				&mcp.TextContent{Text: fmt.Sprintf("invalid URL: %s", args.URL)},
+			},
+			IsError: true,
+		}, nil, nil
 	}
 
-	content, err := h.browser.GetContent(url)
+	content, err := h.browser.GetContent(args.URL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get content: %v", err)
+		return nil, nil, fmt.Errorf("failed to get content: %v", err)
 	}
 
 	markdown, err := htmltomarkdown.ConvertString(content)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert markdown: %v", err)
+		return nil, nil, fmt.Errorf("failed to convert markdown: %v", err)
 	}
 
-	return mcp.NewToolResultText(markdown), nil
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: markdown},
+		},
+	}, nil, nil
 }
 
 // Cleanup cleans up resources

@@ -5,79 +5,58 @@ import (
 	"context"
 	"flag"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
+	"net/http"
 
 	"github.com/WhaleMountain/goreq/internal/handler"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 func main() {
-	// シグナルを受け取る
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
 	var transport string
-	flag.StringVar(&transport, "t", "stdio", "Transport type (stdio or sse)")
-	flag.StringVar(&transport, "transport", "stdio", "Transport type (stdio or sse)")
+	flag.StringVar(&transport, "t", "stdio", "Transport type (stdio or http)")
+	flag.StringVar(&transport, "transport", "stdio", "Transport type (stdio or http)")
+	var httpAddr string
+	flag.StringVar(&httpAddr, "http", ":9000", "HTTP address for streamable HTTP transport")
 	flag.Parse()
 
-	// Create MCP server
-	s := server.NewMCPServer(
-		"GoReq",
-		"1.0.0",
-	)
-
-	// Add tool
-	tool := mcp.NewTool("get_url_content_for_markdown",
-		mcp.WithDescription("指定したURLのWebページ内容を取得し、Markdown形式で返します。"),
-		mcp.WithString("url",
-			mcp.Required(),
-			mcp.Description("WebSite URL"),
-		),
-	)
-
 	// New handler
-	handler, err := handler.NewHandler()
+	h, err := handler.NewHandler()
 	if err != nil {
 		log.Fatalf("Failed to create handler: %v", err)
 	}
-	defer handler.Cleanup()
+	defer h.Cleanup()
 
-	go func() {
-		<-ctx.Done()
-		log.Println("Shutting down mcp server...")
-		handler.Cleanup()
-		os.Exit(0)
-	}()
+	// Create MCP server
+	server := mcp.NewServer(&mcp.Implementation{
+		Name:    "GoReq",
+		Version: "1.2.0",
+	}, nil)
+
+	// Add tool
+	tool := &mcp.Tool{
+		Name:        "get_url_content_for_markdown",
+		Description: "URLのコンテンツの取得",
+	}
 
 	// Add tool handler
-	s.AddTool(tool, handler.HandleRequest)
+	mcp.AddTool(server, tool, h.HandleRequest)
 
-	if transport == "sse" {
-		sseServer := server.NewSSEServer(s, server.WithBaseURL("http://localhost:9000"))
-		log.Printf("SSE Server listening on :9000")
-		if err := sseServer.Start(":9000"); err != nil {
-			log.Fatalf("Failed to start sse server: %v", err)
+	switch transport {
+	case "http":
+		httpHandler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
+			return server
+		}, nil)
+		log.Printf("HTTP Server listening on %s", httpAddr)
+		if err := http.ListenAndServe(httpAddr, httpHandler); err != nil {
+			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
-
-	} else if transport == "http" {
-		log.Printf("Starting HTTP Server on :9000")
-		httpServer := server.NewStreamableHTTPServer(s, server.WithEndpointPath("/mcp"))
-		log.Printf("HTTP Server listening on :9000")
-		if err := httpServer.Start(":9000"); err != nil {
-			log.Fatalf("Failed to start HTTP server: %v\n", err)
-		}
-
-	} else if transport == "stdio" {
+	case "stdio":
 		log.Printf("Starting stdio Server")
-		if err := server.ServeStdio(s); err != nil {
+		t := &mcp.StdioTransport{}
+		if err := server.Run(context.Background(), t); err != nil {
 			log.Fatalf("Failed to start stdio server: %v\n", err)
 		}
-
-	} else {
-		log.Fatalf("Invalid transport type: %s. Must be 'stdio' or 'http' or 'sse'", transport)
+	default:
+		log.Fatalf("Invalid transport type: %s. Must be 'stdio' or 'http'", transport)
 	}
 }
